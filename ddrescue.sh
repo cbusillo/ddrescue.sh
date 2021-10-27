@@ -13,7 +13,7 @@ customer=Erik
 #read args
 #args=
 
-incrementAmount=11
+incrementAmount=1000
 
 sudo systemctl mask udisks2.service
 
@@ -39,7 +39,7 @@ do
 	fi
 	sudo touch $customer.log
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
-	sudo ddrescue -dfvv -r0 --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
+	sudo ddrescue --mapfile-interval=1 -dfvv -r0 --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
 	timeRunning=0
 	while [ "$timeRunning" -le 120 ]
 	do
