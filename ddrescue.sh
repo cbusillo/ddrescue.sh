@@ -44,7 +44,7 @@ do
 	while [ "$timeRunning" -le 120 ]
 	do
 		currentTime=$(date +%s)
-		fileTime=$(stat $customer.log -c %Y)
+		fileTime=$(stat $customer.log -c %X)
 		timeRunning=$(expr $currentTime - $fileTime)
 		#echo "\n\n\n\n$timeRunning"
 	done 
