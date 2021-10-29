@@ -40,6 +40,10 @@ do
 	sudo touch $customer.log
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	sudo ddrescue --mapfile-interval=1 -dfvv -r0 --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
+	if [ $? -eq 0 ] 
+	then
+		break
+	fi
 	timeRunning=0
 	while [ "$timeRunning" -le 10 ]
 	do
