@@ -17,6 +17,7 @@ restartTime=4
 currentPosition=0
 ddArgs="--cpass=1"
 
+touch $customer.log
 
 sudo systemctl mask udisks2.service
 
@@ -24,7 +25,6 @@ totalCount=0
 while true
 do
 	count=0
-	#./plugoffon.py > /dev/null old cloud plug
 	echo Plug off
 	sudo uhubctl -a off -l 2-1 > /dev/null 
 	sleep 1
@@ -32,7 +32,7 @@ do
 	echo Plug on
 	sudo uhubctl -a on -l 2-1 > /dev/null 
 	currentRetry=`sed '7q;d' Bad.log | tr -s " " | cut -d ' ' -f3`
-	echo -ne "\nRuns: $totalCount Retry: $currentRetry Current increment: $incrementAmount time waiting for $source: "
+	echo -ne "\nRuns: $totalCount Retry: $currentRetry Current increment: $incrementAmount Current Postion: $currentPosition time waiting for $source: "
 	
 	while [[ ! -b /dev/$source ]] && [[ $count -le 10 ]]
 	do
@@ -94,6 +94,10 @@ do
 		fileTime=$(stat $customer.log -c %X)
 		timeRunning=$(expr $currentTime - $fileTime)
 	done
+	#if [ "$timeRunning" -ge "$restartTime" ]
+	#then
+	#	./plugoffon.py > /dev/null
+	#fi
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	totalCount=$(( $totalCount + 1 ))
 done
