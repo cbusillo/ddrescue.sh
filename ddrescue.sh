@@ -11,7 +11,7 @@ customer=Bad
 #read args
 #args=
 
-incrementAmount=1000
+incrementAmount=1000000000
 retryAttempts=20
 restartTime=4
 currentPosition=0
@@ -24,41 +24,43 @@ totalCount=0
 while true
 do
 	count=0
-	sudo killall ddrescue
 	#./plugoffon.py > /dev/null old cloud plug
 	echo Plug off
 	sudo uhubctl -a off -l 2-1 > /dev/null 
 	sleep 1
+	sudo killall ddrescue
 	echo Plug on
 	sudo uhubctl -a on -l 2-1 > /dev/null 
-	echo -ne "\n$totalCount time waiting for $source "
-
+	currentRetry=`sed '7q;d' Bad.log | tr -s " " | cut -d ' ' -f3`
+	echo -ne "\nRuns: $totalCount Retry: $currentRetry Current increment: $incrementAmount time waiting for $source: "
+	
 	while [[ ! -b /dev/$source ]] && [[ $count -le 10 ]]
 	do
 		sleep 1
 		echo -n " $count"
 		count=$(( $count + 1 ))
 	done
-	currentRetry=`sed '7q;d' Bad.log | tr -s " " | cut -d ' ' -f3`
+	echo -ne "\n"
+
 	if [ "$currentRetry" -eq 2 ] 
 	then 
 		restartTime=10
-		incrementAmount=500
+		incrementAmount=10000000
 		ddArgs="--cpass=1"
 	elif [ "$currentRetry" -eq 3 ] 
 	then 
 		restartTime=10
-		incrementAmount=100
+		incrementAmount=100000
 		ddArgs="--cpass=1"
 	elif [ "$currentRetry" -eq 4 ] 
 	then 
 		restartTime=10
-		incrementAmount=50
+		incrementAmount=1000
 		ddArgs="--cpass=1"
 	elif [ "$currentRetry" -eq 5 ] 
 	then 
 		restartTime=10
-		incrementAmount=25
+		incrementAmount=100
 		ddArgs="--cpass=1"
 	elif [ "$currentRetry" -eq 6 ] 
 	then 
