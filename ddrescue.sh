@@ -84,7 +84,6 @@ do
 		
 	sudo touch $customer.log
 	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts $ddArgs --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
-	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	
 	timeRunning=0
 	while [ "$timeRunning" -le "$restartTime" ]
@@ -92,7 +91,8 @@ do
 		currentTime=$(date +%s)
 		fileTime=$(stat $customer.log -c %X)
 		timeRunning=$(expr $currentTime - $fileTime)
-	done 
+	done
+	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	totalCount=$(( $totalCount + 1 ))
 done
 
