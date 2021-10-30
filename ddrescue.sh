@@ -12,18 +12,11 @@ customer=Bad
 #args=
 
 incrementAmount=1000
-retryAttempts=0
+retryAttempts=20
 restartTime=4
 currentPosition=0
+ddArgs="--cpass=1"
 
-secondPass=0
-
-if [ $secondPass -eq 1 ]
-then
-	incrementAmount=0
-	retryAttempts=31
-	restartTime=4
-fi
 
 sudo systemctl mask udisks2.service
 
@@ -38,7 +31,7 @@ do
 	sleep 1
 	echo Plug on
 	sudo uhubctl -a on -l 2-1 > /dev/null 
-	echo -ne "\n$totalCount time waiting for $source"
+	echo -ne "\n$totalCount time waiting for $source "
 
 	while [[ ! -b /dev/$source ]] && [[ $count -le 10 ]]
 	do
@@ -46,17 +39,51 @@ do
 		echo -n " $count"
 		count=$(( $count + 1 ))
 	done
-	echo
-	if [ $((totalCount%2)) -eq 1 ]
-	then
-		reverse=-R
-	else
-		reverse=
+	currentRetry=`sed '7q;d' Bad.log | tr -s " " | cut -d ' ' -f3`
+	if [ "$currentRetry" -eq 2 ] 
+	then 
+		restartTime=10
+		incrementAmount=500
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 3 ] 
+	then 
+		restartTime=10
+		incrementAmount=100
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 4 ] 
+	then 
+		restartTime=10
+		incrementAmount=50
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 5 ] 
+	then 
+		restartTime=10
+		incrementAmount=25
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 6 ] 
+	then 
+		restartTime=10
+		incrementAmount=10
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 7 ] 
+	then 
+		restartTime=10
+		incrementAmount=5
+		ddArgs="--cpass=1"
+	elif [ "$currentRetry" -eq 8 ] 
+	then 
+		restartTime=10
+		incrementAmount=1
+		ddArgs="--cpass=1-4"
+	elif [ "$currentRetry" -eq 9 ] 
+	then 
+		restartTime=20
+		incrementAmount=0
+		ddArgs="--cpass=1-5"
 	fi
+		
 	sudo touch $customer.log
-	
-	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
-	
+	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts $ddArgs --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	
 	timeRunning=0
