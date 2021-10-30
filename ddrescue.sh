@@ -2,10 +2,10 @@
 
 #echo "What is the name of the source device, e.g. sda?"
 #read source
-source=sda
+source=sdb
 #echo "What is the name of the destination device, e.g. sdb?"
 #read destination
-destination=sdb
+destination=sda
 #echo "What is the name of the recovery?"
 #read customer
 customer=Erik
@@ -13,7 +13,19 @@ customer=Erik
 #read args
 #args=
 
-incrementAmount=100
+incrementAmount=1000
+retryAttempts=0
+restartTime=4
+currentPosition=0
+
+secondPass=1
+
+if [ $secondPass -eq 1 ]
+then
+	incrementAmount=10
+	retryAttempts=20
+	restartTime=4
+fi
 
 sudo systemctl mask udisks2.service
 
@@ -21,10 +33,15 @@ totalCount=0
 while true
 do
 	count=0
-	./plugoffon.py > /dev/null 
+	#./plugoffon.py > /dev/null old cloud plug
+	echo Plug off
+	sudo uhubctl -a off -l 2-1 > /dev/null 
+	sleep 1
+	echo Plug on
+	sudo uhubctl -a on -l 2-1 > /dev/null 
 	echo -ne "\n$totalCount time waiting for $source"
 
-	while [[ ! -b /dev/$source ]] && [[ $count -le 60 ]]
+	while [[ ! -b /dev/$source ]] && [[ $count -le 10 ]]
 	do
 		sleep 1
 		echo -n " $count"
@@ -38,14 +55,16 @@ do
 		reverse=
 	fi
 	sudo touch $customer.log
+	
+	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
-	sudo ddrescue --mapfile-interval=1 -dfvv -r0 --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
-	if [ $? -eq 0 ] 
+	
+	if [ $? -eq 10 ] 
 	then
 		break
 	fi
 	timeRunning=0
-	while [ "$timeRunning" -le 10 ]
+	while [ "$timeRunning" -le "$restartTime" ]
 	do
 		currentTime=$(date +%s)
 		fileTime=$(stat $customer.log -c %X)
