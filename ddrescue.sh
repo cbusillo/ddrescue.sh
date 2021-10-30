@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #echo "What is the name of the source device, e.g. sda?"
 #read source
 source=sdb
@@ -8,7 +6,7 @@ source=sdb
 destination=sda
 #echo "What is the name of the recovery?"
 #read customer
-customer=Erik
+customer=Bad
 #echo "What arguments would you like?"
 #read args
 #args=
@@ -18,12 +16,12 @@ retryAttempts=0
 restartTime=4
 currentPosition=0
 
-secondPass=1
+secondPass=0
 
 if [ $secondPass -eq 1 ]
 then
-	incrementAmount=10
-	retryAttempts=20
+	incrementAmount=0
+	retryAttempts=31
 	restartTime=4
 fi
 
@@ -33,6 +31,7 @@ totalCount=0
 while true
 do
 	count=0
+	sudo killall ddrescue
 	#./plugoffon.py > /dev/null old cloud plug
 	echo Plug off
 	sudo uhubctl -a off -l 2-1 > /dev/null 
@@ -57,12 +56,9 @@ do
 	sudo touch $customer.log
 	
 	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
+	
 	currentPosition=$(( `sed '7q;d' $customer.log | cut -d ' ' -f1` + $incrementAmount ))
 	
-	if [ $? -eq 10 ] 
-	then
-		break
-	fi
 	timeRunning=0
 	while [ "$timeRunning" -le "$restartTime" ]
 	do
