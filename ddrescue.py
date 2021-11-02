@@ -7,11 +7,12 @@ import time
 #destination = input("What is the name of the destination device, e.g. sdb? ") or "sda"
 #customer = input("What is the name of the recovery? ") or "Bad2"
 #arguments = input("What arguments would you like? ") or ""
-source = "sdb"
-destination = "sda"
-customer = "Bad2"
+customer = "Bad"
+source = "rdisk4"
+destination = "/Users/cbusillo/test.img"
 arguments = ""
 
+uhubctlArgs = "-l 1-2.4 -p 1"
 
 incrementAmount = 1000000000
 retryAttempts = 20
@@ -28,10 +29,10 @@ currentRetry = 0
 while 1:
 	count=0
 	print("Plug off")
-	#os.system("sudo uhubctl -a off -l 2-1 > /dev/null ")
-	#time.sleep(1)
-	#os.system("sudo killall ddrescue")
-	#os.system("sudo uhubctl -a on -l 2-1 > /dev/null ")
+	os.system("sudo uhubctl -a off {} > /dev/null ".format(uhubctlArgs))
+	time.sleep(1)
+	os.system("sudo killall ddrescue")
+	os.system("sudo uhubctl -a on {} > /dev/null ".format(uhubctlArgs))
 	print("Plug on")
 	
 	try:
@@ -39,7 +40,15 @@ while 1:
 		currentRetry = lines[7]
 	except Exception as e:
 		print("First run")
-	print(currentRetry)
+	print(f"Runs: {totalCount} Retry: {currentRetry} Current increment: {incrementAmount} Current Postion: {currentPosition} time waiting for {source}: ", end='')
+	
+	while not os.path.exists("/dev/" + source):
+		time.sleep(1)
+		print(f" {count}", end='', flush=True)
+		count = count + 1
+	ddcommand = f"sudo ddrescue --mapfile-interval=1 -fvv -r{retryAttempts} {ddArgs} --min-read-rate=1024 --input-position={currentPosition} /dev/{source} /dev/{destination} {customer}.log &"
+	print(ddcommand)
+	#os.system(ddcommand)
 """
 	
 	currentRetry=`sed '7q;d' Bad.log | tr -s " " | cut -d ' ' -f3`
