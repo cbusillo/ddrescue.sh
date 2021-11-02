@@ -6,14 +6,14 @@ source=sdb
 destination=sda
 #echo "What is the name of the recovery?"
 #read customer
-customer=Bad
+customer=Erik
 #echo "What arguments would you like?"
 #read args
 #args=
 
 incrementAmount=1000000000
 retryAttempts=20
-restartTime=4
+restartTime=5
 currentPosition=0
 ddArgs="--cpass=1"
 
@@ -83,7 +83,9 @@ do
 		incrementAmount=0
 		ddArgs="--cpass=1-5"
 	fi
-		
+	restartTime=100
+	incrementAmount=0
+	ddArgs=""
 	sudo touch $customer.log
 	sudo ddrescue --mapfile-interval=1 -dfvv -r$retryAttempts $ddArgs --min-read-rate=1024 --input-position=$currentPosition /dev/$source /dev/$destination $customer.log &
 	
